@@ -3,16 +3,14 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  Patch,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -53,15 +51,17 @@ export class UserController {
       }),
     }),
   )
-  updatePhoto(
+  async updatePhoto(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
-  ) {
-    // return this.userService.update(id,);
+  ): Promise<string> {
+    return await this.userService.update(id, { photoUrl: file.filename });
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @Patch('active/:id')
+  async toggleActiveStatus(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<User> {
+    return await this.userService.changeActiveStatus(id);
   }
 }

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user.dto';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -27,11 +27,24 @@ export class UserService {
     );
   }
 
-  async update(id: number, updateUserProfileDto: UpdateUserProfileDto) {
-    return '';
+  async update(id: number, profileUrl: UpdateUserProfileDto): Promise<string> {
+    const result: UpdateResult = await this.userRepository.update(
+      id,
+      profileUrl,
+    );
+    if (result.affected === 0) {
+      return 'No user found';
+    }
+    return 'Updated user profile';
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async changeActiveStatus(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    const isActive = !user.isActive;
+    await this.userRepository.update(id, { isActive });
+    return { ...user, isActive };
   }
 }
