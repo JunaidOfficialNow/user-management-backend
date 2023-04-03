@@ -7,11 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('api/v1/users')
 export class UserController {
@@ -32,12 +37,27 @@ export class UserController {
     return await this.userService.findOne(id);
   }
 
-  @Patch('profile/:id')
+  @Post('profile/:id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './profiles',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          const extension = extname(file.originalname);
+          cb(null, `${randomName}${extension}`);
+        },
+      }),
+    }),
+  )
   updatePhoto(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserProfileDto: UpdateUserProfileDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.userService.update(id, updateUserProfileDto);
+    // return this.userService.update(id,);
   }
 
   @Delete(':id')
