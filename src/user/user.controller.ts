@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,6 +29,17 @@ export class UserController {
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
+  }
+
+  @Get('search')
+  async searchUsers(@Query('q') searchQuery: string): Promise<object> {
+    const names = await this.userService.searchUserByName(searchQuery);
+    const emails = await this.userService.searchUserByEmail(searchQuery);
+    const results = {
+      names: names.map((name) => name.name),
+      emails: emails.map((email) => email.email),
+    };
+    return results;
   }
 
   @Get(':id')
