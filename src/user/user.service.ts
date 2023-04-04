@@ -9,15 +9,19 @@ import { UpdateUserProfileDto } from './dto/update-user.dto';
 import { Like, Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject('USER_REPOSITORY')
     private userRepository: Repository<User>,
+    private jwtService: JwtService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(
+    createUserDto: CreateUserDto,
+  ): Promise<{ access_token: string }> {
     const user = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -26,7 +30,10 @@ export class UserService {
     }
     createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
     const newUser = this.userRepository.create(createUserDto);
-    return await this.userRepository.save(newUser);
+    await this.userRepository.save(newUser);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...details } = newUser;
+    return { access_token: await this.jwtService.signAsync(details) };
   }
 
   async findAll(): Promise<User[]> {

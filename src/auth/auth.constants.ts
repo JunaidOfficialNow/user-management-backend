@@ -1,4 +1,10 @@
+/* eslint-disable prettier/prettier */
 export const jwtConstants = {
   secret:
-    'DO NOT USE THIS VALUE. INSTEAD, CREATE A COMPLEX SECRET AND KEEP IT SAFE OUTSIDE OF THE SOURCE CODE.',
+    'Ham secret , be secret, and die secret',
 };
+
+export const adminCredentials = {
+  email: 'admin@example.com',
+  password: 'jithu@123'
+}

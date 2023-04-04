@@ -8,7 +8,20 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async signIn(@Body() signInDto: SignInDto) {
+  async signIn(
+    @Body() signInDto: SignInDto,
+  ): Promise<{ access_token: string }> {
     return await this.authService.signIn(signInDto.email, signInDto.password);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('admin/login')
+  async AdminsignIn(
+    @Body() signInDto: SignInDto,
+  ): Promise<{ access_token: string }> {
+    return await this.authService.AdminsignIn(
+      signInDto.email,
+      signInDto.password,
+    );
   }
 }
