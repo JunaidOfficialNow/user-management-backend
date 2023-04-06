@@ -10,6 +10,7 @@ import {
   Patch,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,6 +19,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { AdminAuthGuard, AuthGuard } from 'src/auth/auth.guard';
+
+interface userRequest extends Request {
+  user: User;
+}
 
 @Controller('api/v1/users')
 export class UserController {
@@ -29,10 +34,22 @@ export class UserController {
   ): Promise<{ access_token: string }> {
     return await this.userService.create(createUserDto);
   }
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(): Promise<User[]> {
     return await this.userService.findAll();
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Get('admin')
+  async findAdminAll(): Promise<User[]> {
+    return await this.userService.findAll();
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('current')
+  async fineCurrentUser(@Req() req: userRequest): Promise<User | string> {
+    return await this.userService.findOne(req.user.id);
   }
 
   @UseGuards(AdminAuthGuard)
@@ -53,7 +70,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('profile/:id')
+  @Post('profile')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -70,13 +87,15 @@ export class UserController {
     }),
   )
   async updatePhoto(
-    @Param('id', ParseIntPipe) id: number,
+    @Req() req: userRequest,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<string> {
-    return await this.userService.update(id, { photoUrl: file.filename });
+  ): Promise<{ success: string | boolean }> {
+    return await this.userService.update(req.user.id, {
+      photoUrl: file.filename,
+    });
   }
   @UseGuards(AdminAuthGuard)
-  @Patch('active/:id')
+  @Patch('active/:id/admin')
   async toggleActiveStatus(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<User> {

@@ -51,15 +51,18 @@ export class UserService {
     return await this.userRepository.findOne({ where: { email } });
   }
 
-  async update(id: number, profileUrl: UpdateUserProfileDto): Promise<string> {
+  async update(
+    id: number,
+    profileUrl: UpdateUserProfileDto,
+  ): Promise<{ success: string | boolean }> {
     const result: UpdateResult = await this.userRepository.update(
       id,
       profileUrl,
     );
     if (result.affected === 0) {
-      return 'No user found';
+      return { success: false };
     }
-    return 'Updated user profile';
+    return { success: profileUrl.photoUrl };
   }
 
   async changeActiveStatus(id: number): Promise<User> {
